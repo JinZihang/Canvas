@@ -1,0 +1,27 @@
+.react-canvas-container {
+  position: relative;
+}
+
+.react-canvas {
+  border: 1px solid black;
+}
+
+.resizer {
+  position: absolute;
+  user-select: none;
+}
+.resizer-r {
+  top: 0;
+  width: 5px;
+  cursor: ew-resize;
+}
+.resizer-b {
+  left: 0;
+  height: 5px;
+  cursor: ns-resize;
+}
+.resizer-br {
+  width: 5px;
+  height: 5px;
+  cursor: nwse-resize;
+}
