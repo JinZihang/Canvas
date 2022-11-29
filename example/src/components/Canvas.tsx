@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import './Canvas.css'
 
 type Dimension = { width: number; height: number }
@@ -42,8 +42,15 @@ export default function Canvas(props: {
     maxWidth: props.canvasMaxWidth ? props.canvasMaxWidth : 900,
     maxHeight: props.canvasMaxHeight ? props.canvasMaxHeight : 900,
   }
+  const reactCanvas = useRef(null)
+  const [viewBox, setViewBox] = useState([0, 0, canvasDim.width, canvasDim.height])
+  const [zoomPercentage, setZoomPercentage] = useState(1)
 
   useEffect(() => {
+    const updateViewBox = () => {
+      setViewBox([viewBox[0], viewBox[1], canvasDim.width * zoomPercentage, canvasDim.height * zoomPercentage])
+    }
+
     const handleMouseMove = (event: MouseEvent) => {
       if (resizer) {
         const newDim = {
@@ -66,6 +73,7 @@ export default function Canvas(props: {
           width: resizer === 'B' ? canvasDim.width : newDim.width,
           height: resizer === 'R' ? canvasDim.height : newDim.height,
         })
+        updateViewBox()
       }
     }
 
@@ -73,12 +81,20 @@ export default function Canvas(props: {
       if (resizer) setResizer(undefined)
     }
 
+    const handleWheel = (event: WheelEvent) => {
+      setZoomPercentage(Math.min(Math.max(zoomPercentage + (event.deltaY > 0 ? 0.01 : -0.01), 0.01), 1.5))
+      updateViewBox()
+    }
+
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', handleMouseUp)
+    const reactCanvasElement = reactCanvas.current as unknown as HTMLElement
+    reactCanvasElement.addEventListener('wheel', handleWheel)
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
+      reactCanvasElement.removeEventListener('wheel', handleWheel)
     }
   })
 
@@ -123,7 +139,13 @@ export default function Canvas(props: {
 
   return (
     <div className='react-canvas-container'>
-      <svg className='react-canvas' width={canvasDim.width} height={canvasDim.height}>
+      <svg
+        className='react-canvas'
+        ref={reactCanvas}
+        width={canvasDim.width}
+        height={canvasDim.height}
+        viewBox={viewBox.join(' ')}
+      >
         <line x1='6' y1='66' x2='233' y2='250' stroke='black' />
       </svg>
       {renderResizers()}
